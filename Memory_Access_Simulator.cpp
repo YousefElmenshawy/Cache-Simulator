@@ -16,20 +16,26 @@ Memory_Access_Simulator::Memory_Access_Simulator(int L1Size, int L1LineSize, int
       cycles(0),
       L1HitTime(L1Hit),
       L2HitTime(L2Hit),
-      DRAMPenalty(DRAM)
+      DRAMPenalty(DRAM),
+      lastMissPenalty(0)
+
 {}
 
 cacheResType Memory_Access_Simulator::simulateMemoryAccess(unsigned int addr) {
     if (L1.Access(addr)) {
-         //cycles += L1HitTime;
+        lastMissPenalty = 0;
         return HIT;
     } else if (L2.Access(addr)) {
-        cycles += L2HitTime;
+        lastMissPenalty = L2HitTime;
         return HIT;
     } else {
-        cycles += L2HitTime + DRAMPenalty;
+        lastMissPenalty = L2HitTime + DRAMPenalty;
         return MISS;
     }
+}
+
+int Memory_Access_Simulator::getLastMissPenalty() const {
+    return lastMissPenalty;
 }
 
 float Memory_Access_Simulator::getCPI(int totalInstructions) const {

@@ -16,6 +16,8 @@ class Memory_Access_Simulator {
         int L1HitTime;
         int L2HitTime;
         int DRAMPenalty;
+        int lastMissPenalty;
+    bool lastAccessL1Hit = false;
 
     public:
         Memory_Access_Simulator(int L1Size, int L1LineSize, int L1Ass, int L2Size, int L2LineSize, int L2Ass,int L1Hit = 1, int L2Hit = 10, int DRAM = 50);
@@ -26,6 +28,7 @@ class Memory_Access_Simulator {
             return cycles;
         }
 
+    int getLastMissPenalty() const;
 
 };
 

@@ -6,6 +6,7 @@
 #include "Memory_Access_Simulator.h"
 #include "Cache.h"
 #include <cstdlib>
+#include <cstdint>
 #include <ctime>
 using namespace std;
 
@@ -81,36 +82,41 @@ int main() {
     MemGenFunc memGens[] = {memGen1, memGen2, memGen3, memGen4, memGen5};
     const char* memGenNames[] = {"memGen1", "memGen2", "memGen3", "memGen4", "memGen5"};
 
-    cout << "Two-Level Cache Simulator (Auto Test)\n\n";
+    cout << "Two-Level Cache Simulator (Final Version)\n\n";
 
     for (int g = 0; g < 5; g++) {
         for (int l = 0; l < 4; l++) {
-            // Reset the simulator
             Memory_Access_Simulator sim(
                 L1Size, lineSizes[l], L1Assoc,
                 L2Size, L2LineSize, L2Assoc,
                 L1HitTime, L2HitTime, DRAMPenalty
             );
 
-            unsigned int hit = 0;
             unsigned int addr;
-            cacheResType r;
+            float totalCycles = 0;
+            int memoryAccesses = 0;
+            int hits = 0;
 
-            // Reset generators if needed (static vars inside memGens)
             m_w = 0xABABAB55;
             m_z = 0x05080902;
 
             for (int i = 0; i < NO_OF_Iterations; i++) {
-                addr = memGens[g](); // call current generator
-                r = sim.simulateMemoryAccess(addr);
-                if (r == HIT)
-                    hit++;
-                // cout <<"0x" << setfill('0') << setw(8) << hex << addr <<" ("<< msg[r] <<")\n";
+                float p = static_cast<float>(rand_()) / UINT32_MAX;
+
+                if (p <= 0.35f) {
+                    memoryAccesses++;
+                    addr = memGens[g]();
+                    cacheResType result = sim.simulateMemoryAccess(addr);
+                    totalCycles += 1 + sim.getLastMissPenalty();  // Always add base CPI + penalty
+                    if (result == HIT)
+                        hits++;
+                } else {
+                    totalCycles += 1; // Non-memory instruction
+                }
             }
 
-            float hitRatio = (100.0f * hit) / NO_OF_Iterations;
-            int totalInstructions = static_cast<int>(NO_OF_Iterations / 0.35);
-            float cpi = 1.0 + static_cast<float>(sim.getCycles()) / totalInstructions;
+            float hitRatio = 100.0f * hits / memoryAccesses;
+            float cpi = totalCycles / NO_OF_Iterations;
 
             cout << "Generator: " << memGenNames[g]
                  << ", L1 Line Size: " << lineSizes[l] << " Bytes\n";
@@ -118,6 +124,6 @@ int main() {
             cout << "  -> Effective CPI: " << fixed << setprecision(2) << cpi << "\n\n";
         }
     }
+
     return 0;
 }
-
