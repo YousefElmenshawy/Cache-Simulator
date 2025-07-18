@@ -3,7 +3,7 @@
 //
 
 #include "Cache.h"
-
+#include <iomanip>
 
 Cache::Cache(int size, int lineSize, int associativity)
     : size(size), LineSize(lineSize), Associativity(associativity)
@@ -31,6 +31,22 @@ bool Cache::Access(unsigned int addr) {
     }
 
     // Cache miss, Store new using random--- TO BE IMPLEMENTED
+
+   // Miss :Looking for an empty line
+    for (int i = 0; i < Associativity; ++i) {
+        if (!Sets[index][i].valid) {
+            Sets[index][i].valid = true;
+            Sets[index][i].tag = tag;
+            return false; // MISS, but inserted in empty line
+        }
+    }
+
+    // Set is full : random replacement
+    int replaceIndex = rand() % Associativity;
+    Sets[index][replaceIndex].tag = tag;
+
+    // Line is already valid, so no need to set valid = true
+    return false; // MISS, replaced existing line
 
 }
 
