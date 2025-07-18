@@ -3,8 +3,10 @@
 //
 #include <iostream>
 #include <iomanip>
-
+#include "Memory_Access_Simulator.h"
 #include "Cache.h"
+#include <cstdlib>
+#include <ctime>
 using namespace std;
 
 
@@ -12,7 +14,7 @@ using namespace std;
 #define DBG 1
 #define DRAM_SIZE (64*1024*1024)
 #define CACHE_SIZE (64*1024)
-enum cacheResType {MISS=0, HIT=1};
+
 /* The following implements a random number generator */
 unsigned int m_w = 0xABABAB55; /* must not be zero, nor 0x464fffff */
 unsigned int m_z = 0x05080902; /* must not be zero, nor 0x9068ffff */
@@ -46,7 +48,7 @@ unsigned int memGen5()
     static unsigned int addr=0;
     return (addr+=32)%(64*16*1024);
 }
-// Direct Mapped Cache Simulator
+//Direct Mapped Cache Simulator
 cacheResType cacheSimDM(unsigned int addr)
 {
    Cache cache(CACHE_SIZE, 64, 1);
@@ -56,26 +58,66 @@ cacheResType cacheSimDM(unsigned int addr)
 // Fully Associative Cache Simulator
 cacheResType cacheSimFA(unsigned int addr)
 {
-    Cache cache(CACHE_SIZE, 64, 4);
+    Cache cache(CACHE_SIZE, 64, 1024);
     return (cache.Access(addr) ? HIT : MISS);
 }
 char *msg[2] = {"Miss","Hit"};
-#define NO_OF_Iterations 100 // Change to 1,000,000
+#define NO_OF_Iterations 1000000 // Change to 1,000,000
 
+typedef unsigned int (*MemGenFunc)(); // function pointer type for memory generators
 
-int main()
-{
-    unsigned int hit = 0;
-    cacheResType r;
-    unsigned int addr;
-    cout << "Direct Mapped Cache Simulator\n";
-    for(int inst=0;inst<NO_OF_Iterations;inst++)
-    {
-        addr = memGen2();
-        r = cacheSimDM(addr);
-        if(r == HIT) hit++;
-        cout <<"0x" << setfill('0') << setw(8) << hex << addr <<" ("<< msg[r]
-        <<")\n";
+int main() {
+    const int L1Size = 16 * 1024;       // 16 KB
+    const int L2Size = 128 * 1024;      // 128 KB
+    const int L1Assoc = 4;
+    const int L2Assoc = 8;
+    const int L2LineSize = 64;          // Fixed for L2
+    const int L1HitTime = 1;
+    const int L2HitTime = 10;
+    const int DRAMPenalty = 50;
+
+    const int lineSizes[4] = {16, 32, 64, 128};
+    // Array of generator functions
+    MemGenFunc memGens[] = {memGen1, memGen2, memGen3, memGen4, memGen5};
+    const char* memGenNames[] = {"memGen1", "memGen2", "memGen3", "memGen4", "memGen5"};
+
+    cout << "Two-Level Cache Simulator (Auto Test)\n\n";
+
+    for (int g = 0; g < 5; g++) {
+        for (int l = 0; l < 4; l++) {
+            // Reset the simulator
+            Memory_Access_Simulator sim(
+                L1Size, lineSizes[l], L1Assoc,
+                L2Size, L2LineSize, L2Assoc,
+                L1HitTime, L2HitTime, DRAMPenalty
+            );
+
+            unsigned int hit = 0;
+            unsigned int addr;
+            cacheResType r;
+
+            // Reset generators if needed (static vars inside memGens)
+            m_w = 0xABABAB55;
+            m_z = 0x05080902;
+
+            for (int i = 0; i < NO_OF_Iterations; i++) {
+                addr = memGens[g](); // call current generator
+                r = sim.simulateMemoryAccess(addr);
+                if (r == HIT)
+                    hit++;
+                // cout <<"0x" << setfill('0') << setw(8) << hex << addr <<" ("<< msg[r] <<")\n";
+            }
+
+            float hitRatio = (100.0f * hit) / NO_OF_Iterations;
+            int totalInstructions = static_cast<int>(NO_OF_Iterations / 0.35);
+            float cpi = 1.0 + static_cast<float>(sim.getCycles()) / totalInstructions;
+
+            cout << "Generator: " << memGenNames[g]
+                 << ", L1 Line Size: " << lineSizes[l] << " Bytes\n";
+            cout << "  -> Hit Ratio: " << fixed << setprecision(2) << hitRatio << " %\n";
+            cout << "  -> Effective CPI: " << fixed << setprecision(2) << cpi << "\n\n";
+        }
     }
-    cout << "Hit ratio = " << (100*hit/NO_OF_Iterations)<< endl;
+    return 0;
 }
+

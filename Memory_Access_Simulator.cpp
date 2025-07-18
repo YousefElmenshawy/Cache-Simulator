@@ -19,13 +19,16 @@ Memory_Access_Simulator::Memory_Access_Simulator(int L1Size, int L1LineSize, int
       DRAMPenalty(DRAM)
 {}
 
-void Memory_Access_Simulator::simulateMemoryAccess(unsigned int addr) {
+cacheResType Memory_Access_Simulator::simulateMemoryAccess(unsigned int addr) {
     if (L1.Access(addr)) {
-        cycles += L1HitTime;
+         //cycles += L1HitTime;
+        return HIT;
     } else if (L2.Access(addr)) {
-        cycles += L1HitTime + L2HitTime;
+        cycles += L2HitTime;
+        return HIT;
     } else {
-        cycles += L1HitTime + L2HitTime + DRAMPenalty;
+        cycles += L2HitTime + DRAMPenalty;
+        return MISS;
     }
 }
 

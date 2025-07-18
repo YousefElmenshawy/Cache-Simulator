@@ -4,6 +4,7 @@
 
 #include "Cache.h"
 #include <iomanip>
+#include <cstdlib>
 
 Cache::Cache(int size, int lineSize, int associativity)
     : size(size), LineSize(lineSize), Associativity(associativity)
@@ -21,7 +22,7 @@ Cache::Cache(int size, int lineSize, int associativity)
 }
 
 bool Cache::Access(unsigned int addr) {
-    int index = addr / (LineSize)%(Associativity);   //Check how this calculation works
+    int index =( addr / LineSize) % (SetNum);   //Check how this calculation works
     int tag = addr / (LineSize * SetNum); // Extract the tag from the address, Check this too
 
     for(int i=0; i<Associativity; i++) {

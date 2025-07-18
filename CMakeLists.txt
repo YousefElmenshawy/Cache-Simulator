@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.10)
 project(Cache_Simulator)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -11,4 +11,5 @@ add_executable(Cache_Simulator
     CacheLine.h
     main.cpp
         Memory_Access_Simulator.cpp
-        Memory_Access_Simulator.h)
+        Memory_Access_Simulator.h
+        main.cpp)
