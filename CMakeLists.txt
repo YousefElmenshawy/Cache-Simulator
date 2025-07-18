@@ -1,9 +1,14 @@
-cmake_minimum_required(VERSION 3.16)
-project(Cache-Simulator)  # You can change this name
+cmake_minimum_required(VERSION 3.30)
+project(Cache_Simulator)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 
-add_executable(Cache-Simulator main.cpp
-        Cache.cpp
-        Cache.h
-        CacheLine.h)
+include_directories(.)
+
+add_executable(Cache_Simulator
+    Cache.cpp
+    Cache.h
+    CacheLine.h
+    main.cpp
+        Memory_Access_Simulator.cpp
+        Memory_Access_Simulator.h)
