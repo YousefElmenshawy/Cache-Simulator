@@ -29,6 +29,17 @@ class Memory_Access_Simulator {
         }
 
     int getLastMissPenalty() const;
+    struct PenaltyBreakdown {
+        int l1WriteBackPenalty = 0;
+        int l2AccessPenalty = 0;
+        int l2WriteBackPenalty = 0;
+        int dramAccessPenalty = 0;
+
+        int getTotalPenalty() const {
+            return l1WriteBackPenalty + l2AccessPenalty + l2WriteBackPenalty + dramAccessPenalty;
+        }
+    };
+
 
 };
 

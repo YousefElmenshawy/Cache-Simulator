@@ -16,6 +16,10 @@ class Cache {
 private:
     int size, LineSize, Associativity, SetNum;   //For Direct-Mapped, N is just 1
     vector<vector<CacheLine>> Sets;
+    // Helper methods for address parsing
+    unsigned int getTag(unsigned int addr);
+    unsigned int getSetIndex(unsigned int addr);
+    unsigned int getBlockOffset(unsigned int addr);
 
 
 public:

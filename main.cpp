@@ -73,7 +73,7 @@ int main() {
     const int L1Assoc = 4;
     const int L2Assoc = 8;
     const int L2LineSize = 64;          // Fixed for L2
-    const int L1HitTime = 1;
+    const int L1HitTime = 1; // 1 base cycle for L1 hit, 0 additional penalty
     const int L2HitTime = 10;
     const int DRAMPenalty = 50;
 
@@ -125,8 +125,8 @@ int main() {
 
             cout << "Generator: " << memGenNames[g]
                  << ", L1 Line Size: " << lineSizes[l] << " Bytes\n";
-            cout << "  -> Hit Ratio: " << fixed << setprecision(2) << hitRatio << " %\n";
-            cout << "  -> Effective CPI: " << fixed << setprecision(2) << cpi << "\n\n";
+            cout << "  -> Hit Ratio: " << fixed << setprecision(4) << hitRatio << " %\n";
+            cout << "  -> Effective CPI: " << fixed << setprecision(4) << cpi << "\n\n";
         }
     }
 

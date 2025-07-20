@@ -23,32 +23,40 @@ Memory_Access_Simulator::Memory_Access_Simulator(int L1Size, int L1LineSize, int
 
 cacheResType Memory_Access_Simulator::simulateMemoryAccess(unsigned int addr, bool isRead) {
     bool L1WriteBack = false;
-    bool L2WriteBack = false;
+    bool L2WriteBackFromEviction = false;
+    bool L2WriteBackFromAccess = false;
 
     unsigned int evictedAddrL1 = 0;
-    if (L1.Access(addr, isRead, L1WriteBack, evictedAddrL1)) {
-        lastMissPenalty = 0;
-        return HIT;
-    }
-
-    int penalty = 0;
     unsigned int evictedAddrL2 = 0;
+
+
+     if (L1.Access(addr, isRead, L1WriteBack, evictedAddrL1)) {
+         lastMissPenalty = 0;
+         return HIT;
+     }
+
+     int penalty = 1;
     if (L1WriteBack) {
-
-        L2.Access(evictedAddrL1, false, L2WriteBack, evictedAddrL2); // now using real evicted address
+        // Write evicted line from L1 into L2
+        L2.Access(evictedAddrL1, false, L2WriteBackFromEviction, evictedAddrL2);
         penalty += L2HitTime;
-        if (L2WriteBack)
-            penalty += DRAMPenalty;
-    }
 
-    if (L2.Access(addr, isRead, L2WriteBack, evictedAddrL2)) {
-        lastMissPenalty = penalty + L2HitTime;
+        if (L2WriteBackFromEviction) {
+            penalty += DRAMPenalty;
+        }
+    }
+    //  access the original address in L2
+    if (L2.Access(addr, isRead, L2WriteBackFromAccess, evictedAddrL2)) {
+        penalty += L2HitTime;
+        lastMissPenalty = penalty - 1;  // subtract base cycle already included
         return HIT;
     }
 
-    lastMissPenalty = penalty + L2HitTime + DRAMPenalty;
+    penalty += L2HitTime + DRAMPenalty;
+    lastMissPenalty = penalty - 1;  // subtract base cycle already included
     return MISS;
 }
+
 
 int Memory_Access_Simulator::getLastMissPenalty() const {
     return lastMissPenalty;

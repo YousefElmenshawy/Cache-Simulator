@@ -5,7 +5,7 @@
 #include "Cache.h"
 #include <iomanip>
 #include <cstdlib>
-
+extern unsigned int rand_();
 Cache::Cache(int size, int lineSize, int associativity)
     : size(size), LineSize(lineSize), Associativity(associativity)
 {
@@ -21,11 +21,24 @@ Cache::Cache(int size, int lineSize, int associativity)
     }
 
 }
+// memory address [Tag][index][offset]
+unsigned int Cache::getBlockOffset(unsigned int addr) {
+    return addr & (LineSize - 1); // Block offset is the lower bits of the address
+}
+unsigned int Cache::getSetIndex(unsigned int addr) {
+    int offset = __builtin_ctz(LineSize); // log2(LineSize);
+    return (addr >> offset) & (SetNum - 1); // Set index is the bits after the block offset
+}
+unsigned int Cache::getTag(unsigned int addr) {
+    int offset = __builtin_ctz(LineSize); // log2(LineSize);
+    int index = __builtin_ctz(SetNum); // log2(SetNum);
+    return addr >> (offset + index); // Tag is the remaining bits of the address
+}
 
 bool Cache::Access(unsigned int addr, bool isRead, bool& writeBackRequired, unsigned int& evictedAddr) {
     writeBackRequired = false;
-    int index = (addr / LineSize) % SetNum;
-    int tag = addr / (LineSize * SetNum);
+    unsigned int index = getSetIndex(addr);
+    unsigned int tag = getTag(addr);
 
     // Look for a hit
     for (int i = 0; i < Associativity; ++i) {
@@ -49,12 +62,15 @@ bool Cache::Access(unsigned int addr, bool isRead, bool& writeBackRequired, unsi
     }
 
     // No empty slot: random replacement
-    int replaceIndex = rand() % Associativity;
+    int replaceIndex = rand_() % Associativity;
     CacheLine& line = Sets[index][replaceIndex];
 
     if (line.valid && line.dirty) {
         writeBackRequired = true;
         evictedAddr = (line.tag * SetNum + index) * LineSize;
+        // int offsetBits = __builtin_ctz(LineSize);
+        // int indexBits = __builtin_ctz(SetNum);
+        // evictedAddr = (line.tag << (offsetBits + indexBits)) | (index << offsetBits);
     }
 
     line.tag = tag;
