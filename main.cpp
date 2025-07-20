@@ -49,25 +49,34 @@ unsigned int memGen5()
     static unsigned int addr=0;
     return (addr+=32)%(64*16*1024);
 }
-//Direct Mapped Cache Simulator
-// cacheResType cacheSimDM(unsigned int addr)
-// {
-//    Cache cache(CACHE_SIZE, 64, 1);
-//     return (cache.Access(addr) ? HIT : MISS);
-//
-// }
-// // Fully Associative Cache Simulator
-// cacheSimFA(unsigned int addr)
-// {
-//     Cache cache(CACHE_SIZE, 64, 1024);
-//     return (cache.Access(addr) ? HIT : MISS);
-// }
-char *msg[2] = {"Miss","Hit"};
-#define NO_OF_Iterations 1000000 // Change to 1,000,000
 
+char *msg[2] = {"Miss","Hit"};
+//#define NO_OF_Iterations 1000000 // Change to 1,000,000
 typedef unsigned int (*MemGenFunc)(); // function pointer type for memory generators
 
-int main() {
+int main(int argc, char* argv[]) {
+    int iterations = 1000000; // default value
+    int selectedGen = -1;     // -1 means all gens
+    int selectedLineSize = -1; // -1 means all line sizes
+
+    if (argc > 1) selectedGen = atoi(argv[1]);
+    if (argc > 2) selectedLineSize = atoi(argv[2]);
+    if (argc > 3) iterations = atoi(argv[3]);
+
+    int NO_OF_Iterations = iterations;
+
+    if (selectedGen < -1 || selectedGen > 4) {
+        cerr << "Invalid generator index. Use 0 to 4 or -1 for all.\n";
+        return 1;
+    }
+
+    if (selectedLineSize != -1 && selectedLineSize != 16 &&
+        selectedLineSize != 32 && selectedLineSize != 64 &&
+        selectedLineSize != 128) {
+        cerr << "Invalid line size. Use 16, 32, 64, 128 or -1 for all.\n";
+        return 1;
+        }
+
     const int L1Size = 16 * 1024;       // 16 KB
     const int L2Size = 128 * 1024;      // 128 KB
     const int L1Assoc = 4;
@@ -85,7 +94,9 @@ int main() {
     cout << "Two-Level Cache Simulator (Final Version)\n\n";
 
     for (int g = 0; g < 5; g++) {
+        if (selectedGen != -1 && g != selectedGen) continue;
         for (int l = 0; l < 4; l++) {
+            if (selectedLineSize != -1 && lineSizes[l] != selectedLineSize) continue;
             Memory_Access_Simulator sim(
                 L1Size, lineSizes[l], L1Assoc,
                 L2Size, L2LineSize, L2Assoc,
