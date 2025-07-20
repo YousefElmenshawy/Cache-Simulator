@@ -25,23 +25,23 @@ cacheResType Memory_Access_Simulator::simulateMemoryAccess(unsigned int addr, bo
     bool L1WriteBack = false;
     bool L2WriteBack = false;
 
-    if (L1.Access(addr, isRead, L1WriteBack)) {
+    unsigned int evictedAddrL1 = 0;
+    if (L1.Access(addr, isRead, L1WriteBack, evictedAddrL1)) {
         lastMissPenalty = 0;
         return HIT;
     }
 
     int penalty = 0;
-
+    unsigned int evictedAddrL2 = 0;
     if (L1WriteBack) {
-        // Write L1 evicted dirty line to L2
-        unsigned int dummy = 0; // Writeback address doesn't matter here
-        L2.Access(dummy, true, L2WriteBack); // Write to L2
+
+        L2.Access(evictedAddrL1, false, L2WriteBack, evictedAddrL2); // now using real evicted address
         penalty += L2HitTime;
         if (L2WriteBack)
             penalty += DRAMPenalty;
     }
 
-    if (L2.Access(addr, isRead, L2WriteBack)) {
+    if (L2.Access(addr, isRead, L2WriteBack, evictedAddrL2)) {
         lastMissPenalty = penalty + L2HitTime;
         return HIT;
     }

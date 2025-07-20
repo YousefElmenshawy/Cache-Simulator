@@ -57,7 +57,7 @@ unsigned int memGen5()
 //
 // }
 // // Fully Associative Cache Simulator
-// cacheResType cacheSimFA(unsigned int addr)
+// cacheSimFA(unsigned int addr)
 // {
 //     Cache cache(CACHE_SIZE, 64, 1024);
 //     return (cache.Access(addr) ? HIT : MISS);

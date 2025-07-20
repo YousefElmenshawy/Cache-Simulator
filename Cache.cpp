@@ -22,7 +22,7 @@ Cache::Cache(int size, int lineSize, int associativity)
 
 }
 
-bool Cache::Access(unsigned int addr, bool isRead, bool& writeBackRequired) {
+bool Cache::Access(unsigned int addr, bool isRead, bool& writeBackRequired, unsigned int& evictedAddr) {
     writeBackRequired = false;
     int index = (addr / LineSize) % SetNum;
     int tag = addr / (LineSize * SetNum);
@@ -52,8 +52,10 @@ bool Cache::Access(unsigned int addr, bool isRead, bool& writeBackRequired) {
     int replaceIndex = rand() % Associativity;
     CacheLine& line = Sets[index][replaceIndex];
 
-    if (line.valid && line.dirty)
+    if (line.valid && line.dirty) {
         writeBackRequired = true;
+        evictedAddr = (line.tag * SetNum + index) * LineSize;
+    }
 
     line.tag = tag;
     line.valid = true;

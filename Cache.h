@@ -20,7 +20,7 @@ private:
 
 public:
     Cache(int size, int lineSize, int associativity);
-    bool Access(unsigned int addr, bool isRead, bool& writeBackRequired);
+    bool Access(unsigned int addr, bool isRead, bool& writeBackRequired, unsigned int& evictedAddr);
 
 
 
