@@ -15,40 +15,51 @@ Cache::Cache(int size, int lineSize, int associativity)
         for(int j=0;j<associativity;j++) {
             set[j].valid = false; // Initialize valid bits to false
             set[j].tag = 0; // Initialize tag to 0
+            set[j].dirty = false;
         }
         Sets.push_back(set);
     }
 
 }
 
-bool Cache::Access(unsigned int addr) {
-    int index =( addr / LineSize) % (SetNum);   //Check how this calculation works
-    int tag = addr / (LineSize * SetNum); // Extract the tag from the address, Check this too
+bool Cache::Access(unsigned int addr, bool isRead, bool& writeBackRequired) {
+    writeBackRequired = false;
+    int index = (addr / LineSize) % SetNum;
+    int tag = addr / (LineSize * SetNum);
 
-    for(int i=0; i<Associativity; i++) {
-        if(Sets[index][i].valid && Sets[index][i].tag == tag) {
-            return true;  //Hit
-        }
-    }
-
-    // Cache miss, Store new using random--- TO BE IMPLEMENTED
-
-   // Miss :Looking for an empty line
+    // Look for a hit
     for (int i = 0; i < Associativity; ++i) {
-        if (!Sets[index][i].valid) {
-            Sets[index][i].valid = true;
-            Sets[index][i].tag = tag;
-            return false; // MISS, but inserted in empty line
+        CacheLine& line = Sets[index][i];
+        if (line.valid && line.tag == tag) {
+            if (!isRead)
+                line.dirty = true; // Mark dirty on write
+            return true;
         }
     }
 
-    // Set is full : random replacement
+    // Miss: look for an empty slot
+    for (int i = 0; i < Associativity; ++i) {
+        CacheLine& line = Sets[index][i];
+        if (!line.valid) {
+            line.valid = true;
+            line.tag = tag;
+            line.dirty = !isRead;
+            return false;
+        }
+    }
+
+    // No empty slot: random replacement
     int replaceIndex = rand() % Associativity;
-    Sets[index][replaceIndex].tag = tag;
+    CacheLine& line = Sets[index][replaceIndex];
 
-    // Line is already valid, so no need to set valid = true
-    return false; // MISS, replaced existing line
+    if (line.valid && line.dirty)
+        writeBackRequired = true;
 
+    line.tag = tag;
+    line.valid = true;
+    line.dirty = !isRead;
+
+    return false;
 }
 
 

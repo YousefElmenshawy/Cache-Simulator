@@ -9,6 +9,7 @@
 
 struct CacheLine {
     bool valid;        // Valid bit
+    bool dirty;
     unsigned int tag; // Tag for the cache line
 
 };

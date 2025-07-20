@@ -50,18 +50,18 @@ unsigned int memGen5()
     return (addr+=32)%(64*16*1024);
 }
 //Direct Mapped Cache Simulator
-cacheResType cacheSimDM(unsigned int addr)
-{
-   Cache cache(CACHE_SIZE, 64, 1);
-    return (cache.Access(addr) ? HIT : MISS);
-
-}
-// Fully Associative Cache Simulator
-cacheResType cacheSimFA(unsigned int addr)
-{
-    Cache cache(CACHE_SIZE, 64, 1024);
-    return (cache.Access(addr) ? HIT : MISS);
-}
+// cacheResType cacheSimDM(unsigned int addr)
+// {
+//    Cache cache(CACHE_SIZE, 64, 1);
+//     return (cache.Access(addr) ? HIT : MISS);
+//
+// }
+// // Fully Associative Cache Simulator
+// cacheResType cacheSimFA(unsigned int addr)
+// {
+//     Cache cache(CACHE_SIZE, 64, 1024);
+//     return (cache.Access(addr) ? HIT : MISS);
+// }
 char *msg[2] = {"Miss","Hit"};
 #define NO_OF_Iterations 1000000 // Change to 1,000,000
 
@@ -78,7 +78,7 @@ int main() {
     const int DRAMPenalty = 50;
 
     const int lineSizes[4] = {16, 32, 64, 128};
-    // Array of generator functions
+
     MemGenFunc memGens[] = {memGen1, memGen2, memGen3, memGen4, memGen5};
     const char* memGenNames[] = {"memGen1", "memGen2", "memGen3", "memGen4", "memGen5"};
 
@@ -106,14 +106,19 @@ int main() {
                 if (p <= 0.35f) {
                     memoryAccesses++;
                     addr = memGens[g]();
-                    cacheResType result = sim.simulateMemoryAccess(addr);
-                    totalCycles += 1 + sim.getLastMissPenalty();  // Always add base CPI + penalty
+
+                    float rw = static_cast<float>(rand_()) / UINT32_MAX;
+                    bool isRead = rw < 0.5;
+
+                    cacheResType result = sim.simulateMemoryAccess(addr, isRead);
+                    totalCycles += 1 + sim.getLastMissPenalty();  // 1 base + miss penalty
                     if (result == HIT)
                         hits++;
                 } else {
                     totalCycles += 1; // Non-memory instruction
                 }
             }
+
 
             float hitRatio = 100.0f * hits / memoryAccesses;
             float cpi = totalCycles / NO_OF_Iterations;
@@ -127,3 +132,4 @@ int main() {
 
     return 0;
 }
+

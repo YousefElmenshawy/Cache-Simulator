@@ -21,17 +21,33 @@ Memory_Access_Simulator::Memory_Access_Simulator(int L1Size, int L1LineSize, int
 
 {}
 
-cacheResType Memory_Access_Simulator::simulateMemoryAccess(unsigned int addr) {
-    if (L1.Access(addr)) {
+cacheResType Memory_Access_Simulator::simulateMemoryAccess(unsigned int addr, bool isRead) {
+    bool L1WriteBack = false;
+    bool L2WriteBack = false;
+
+    if (L1.Access(addr, isRead, L1WriteBack)) {
         lastMissPenalty = 0;
         return HIT;
-    } else if (L2.Access(addr)) {
-        lastMissPenalty = L2HitTime;
-        return HIT;
-    } else {
-        lastMissPenalty = L2HitTime + DRAMPenalty;
-        return MISS;
     }
+
+    int penalty = 0;
+
+    if (L1WriteBack) {
+        // Write L1 evicted dirty line to L2
+        unsigned int dummy = 0; // Writeback address doesn't matter here
+        L2.Access(dummy, true, L2WriteBack); // Write to L2
+        penalty += L2HitTime;
+        if (L2WriteBack)
+            penalty += DRAMPenalty;
+    }
+
+    if (L2.Access(addr, isRead, L2WriteBack)) {
+        lastMissPenalty = penalty + L2HitTime;
+        return HIT;
+    }
+
+    lastMissPenalty = penalty + L2HitTime + DRAMPenalty;
+    return MISS;
 }
 
 int Memory_Access_Simulator::getLastMissPenalty() const {
