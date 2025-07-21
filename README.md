@@ -1,55 +1,173 @@
 # Two-Level Cache Simulator
 
-## 📌 Overview
-This project simulates a two-level cache hierarchy to evaluate the impact of cache parameters and memory access patterns on overall CPU performance, specifically measured via CPI (Cycles Per Instruction). The simulator reflects realistic system behavior using various memory access patterns and cache configurations.
+This project implements a **two-level cache simulator** in C++ that models memory access behavior across an L1 cache, L2 cache, and DRAM. It evaluates cache performance using configurable cache parameters and a variety of memory access patterns.
 
-## 🧠 Objective
-To build a simulator for a two-level set-associative cache system (L1 and L2), incorporate realistic memory penalties, and analyze how varying the L1 line size affects system performance.
+## 🚀 Features
 
-## 🏗️ Cache Hierarchy Specification
+- Simulates a full L1-L2-DRAM memory hierarchy
+- Supports write-back and write-allocate cache policies
+- Configurable:
+  - L1 & L2 sizes
+  - Line sizes
+  - Associativity
+- Supports 5 distinct memory access generators
+- Measures:
+  - Hit ratio
+  - Effective CPI (cycles per instruction)
 
-### L1 Cache
-- **Size**: 16 KB  
-- **Line Size**: 16 B, 32 B, 64 B, 128 B (variable)  
-- **Associativity**: 4-way set associative  
-- **Hit Time**: 1 cycle  
+---
 
-### L2 Cache
-- **Size**: 128 KB  
-- **Line Size**: 64 B (fixed)  
-- **Associativity**: 8-way set associative  
-- **Hit Time**: 10 cycles  
+## 🧱 Architecture
 
-### Main Memory (DRAM)
-- **Size**: 64 GB  
-- **Access Penalty**: 50 cycles  
+```
+        +-------------+
+        |     CPU     |
+        +-------------+
+                |
+                v
+        +-------------+
+        |   L1 Cache   |
+        +-------------+
+                |
+                v
+        +-------------+
+        |   L2 Cache   |
+        +-------------+
+                |
+                v
+        +-------------+
+        |    DRAM     |
+        +-------------+
+```
 
-## ⚙️ Assumptions
-- 35% of instructions are loads/stores (access the cache)
-- Instruction fetches come from ideal memory (not cached)
-- Both caches use a write-back policy
-- Random replacement policy is used for cache lines
-- Ideal CPI is 1.0 when L1 has 100% hit rate
+- **L1 Cache:** 16 KB, 4-way set associative, line sizes vary
+- **L2 Cache:** 128 KB, 8-way set associative, 64B line size
+- **DRAM:** Simulated with fixed access latency
 
-## 🧪 Simulation Logic
+---
 
-The simulator runs over 1 million instruction cycles using the following loop:
+## 🔧 Build Instructions (CMake – Windows)
 
-```cpp
-cycles = 0;
-for (int i = 0; i < 1'000'000; i++) {
-    float p = random(); // Between 0 and 1
-    if (p <= 0.35) {
-        uint32_t address = generate_memory_address();
-        if (L1_hit(address)) {
-            cycles += 1;
-        } else if (L2_hit(address)) {
-            cycles += 1 + 10;
-        } else {
-            cycles += 1 + 10 + 50;
-        }
-    } else {
-        cycles += 1; // Non-memory instruction
-    }
-}
-CPI = cycles / 1'000'000.0;
+### Prerequisites
+
+- CMake
+- A C++ compiler (e.g., MinGW with C++11 support)
+- A CMake-compatible IDE (e.g., CLion) or terminal with CMake
+
+### Steps
+
+1. Build the project using your CMake IDE (e.g. CLion) or the terminal
+2. After successful build, navigate to the build directory:
+
+   ```bash
+   cd cmake-build-debug
+   ```
+
+3. Run the simulator from the terminal:
+
+   ```bash
+   Cache_Simulator.exe [memoryGenID] [L1LineSize] [iterations]
+   ```
+
+---
+
+## ▶️ Usage
+
+### Syntax
+```bash
+Cache_Simulator.exe [memoryGenID] [L1LineSize] [iterations]
+```
+
+### Arguments
+
+- **memoryGenID:** Choose a memory access generator (0–4) or -1 to run all
+- **L1LineSize:** Line size in bytes: 16, 32, 64, 128, or -1 to test all
+- **iterations:** (Optional) Number of instructions to simulate (default: 1,000,000)
+
+---
+
+## 🔁 Memory Generators
+
+| ID | Generator | Description |
+|----|-----------|-------------|
+| 0  | memGen1   | Sequential access from 0 to DRAM_SIZE |
+| 1  | memGen2   | Random access within a small region (24 KB) |
+| 2  | memGen3   | Full-range uniform random access |
+| 3  | memGen4   | Sequential with wraparound (4 KB) |
+| 4  | memGen5   | Strided access with 32-byte jumps |
+
+---
+
+## 📊 Sample Output
+
+```
+Generator: memGen3, L1 Line Size: 64 Bytes
+  -> Hit Ratio: 0.20 %
+  -> Effective CPI: 25.25
+```
+
+- **Hit Ratio:** Percentage of memory accesses that hit in L1 or L2
+- **Effective CPI:** Average cycles per instruction, including memory delays
+
+---
+
+## ⚙️ Configuration Parameters
+
+| Component | Value |
+|-----------|-------|
+| L1 Size | 16 KB |
+| L2 Size | 128 KB |
+| L1 Assoc | 4-way set associative |
+| L2 Assoc | 8-way set associative |
+| L1 Line Size | 16 / 32 / 64 / 128 Bytes (varied) |
+| L2 Line Size | 64 Bytes (fixed) |
+| L1 Hit Time | 1 cycle |
+| L2 Hit Time | 10 cycles |
+| DRAM Penalty | 50 cycles |
+
+---
+
+## 📁 Project Structure
+
+```
+.
+├── Cache.h / Cache.cpp              # Cache logic (set-associative)
+├── Memory_Access_Simulator.h/.cpp  # Manages cache hierarchy and penalties
+├── main.cpp                         # Driver program
+├── CMakeLists.txt                   # Build configuration
+```
+
+---
+
+## 🧪 How Cache Works
+
+- **Lookup Order:** L1 → L2 → DRAM
+- **Write Policy:** Write-back, write-allocate
+- **Eviction:**
+  - If a dirty line is evicted from L1, it's written to L2
+  - If a dirty line is evicted from L2, it's written to DRAM
+- **Replacement Policy:** Random (for simplicity)
+
+---
+
+## 📌 Future Improvements
+
+- Implement LRU instead of random replacement
+- Support for write-through and no-write-allocate policies
+- Add visualization of cache contents and access patterns
+- Output CSV/graph data for benchmarking
+
+---
+
+## 👨‍💻 Authors
+
+- Yousef Elmenshawy
+- Kareem Rashed
+- Doha
+- Habiba 
+
+---
+
+## 📜 License
+
+This project is licensed under the MIT License.

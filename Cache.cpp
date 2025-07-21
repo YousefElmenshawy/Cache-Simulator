@@ -23,16 +23,13 @@ Cache::Cache(int size, int lineSize, int associativity)
 }
 // memory address [Tag][index][offset]
 unsigned int Cache::getBlockOffset(unsigned int addr) {
-    return addr & (LineSize - 1); // Block offset is the lower bits of the address
+    return addr % LineSize; // Block offset is the lower bits of the address
 }
 unsigned int Cache::getSetIndex(unsigned int addr) {
-    int offset = __builtin_ctz(LineSize); // log2(LineSize);
-    return (addr >> offset) & (SetNum - 1); // Set index is the bits after the block offset
+   return (addr / LineSize) %(SetNum); // Set index is determined by the middle bits of the address
 }
 unsigned int Cache::getTag(unsigned int addr) {
-    int offset = __builtin_ctz(LineSize); // log2(LineSize);
-    int index = __builtin_ctz(SetNum); // log2(SetNum);
-    return addr >> (offset + index); // Tag is the remaining bits of the address
+   return addr/ (LineSize * SetNum); // Tag is the upper bits of the address
 }
 
 bool Cache::Access(unsigned int addr, bool isRead, bool& writeBackRequired, unsigned int& evictedAddr) {
