@@ -94,7 +94,7 @@ Cache_Simulator.exe [memoryGenID] [L1LineSize] [iterations]
 | 1  | memGen2   | Random access within a small region (24 KB) |
 | 2  | memGen3   | Full-range uniform random access |
 | 3  | memGen4   | Sequential with wraparound (4 KB) |
-| 4  | memGen5   | Strided access with 32-byte jumps |
+| 4  | memGen5   | Strided access with 32-byte jumps, wraping around (1MB)|
 
 ---
 
