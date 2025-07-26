@@ -8,7 +8,7 @@
 #include  <vector>
 #include "CacheLine.h"
 using namespace std;
-enum cacheResType { MISS = 0, HIT = 1 };
+enum cacheResType { MISS = 0, HIT = 1, L2_HIT = 2 };
 
 
 class Cache {

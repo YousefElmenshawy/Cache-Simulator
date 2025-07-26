@@ -107,6 +107,7 @@ int main(int argc, char* argv[]) {
             float totalCycles = 0;
             int memoryAccesses = 0;
             int hits = 0;
+            int l2Hits = 0; // Add L2 hit counter
 
             m_w = 0xABABAB55;
             m_z = 0x05080902;
@@ -122,25 +123,28 @@ int main(int argc, char* argv[]) {
                     bool isRead = rw < 0.5;
 
                     cacheResType result = sim.simulateMemoryAccess(addr, isRead);
-                    totalCycles += 1 + sim.getLastMissPenalty();  // 1 base + miss penalty
+                    totalCycles += 1 + sim.getLastMissPenalty();
                     if (result == HIT)
                         hits++;
+                else if (result == L2_HIT)
+                    l2Hits++;
                 } else {
                     totalCycles += 1; // Non-memory instruction
                 }
             }
 
 
-            float hitRatio = 100.0f * hits / memoryAccesses;
+            float hitRatio = 100.0f * hits / memoryAccesses; // Only L1 hits are counted
+            float l2HitRatio = (memoryAccesses - hits) > 0 ? 100.0f * l2Hits / (memoryAccesses - hits) : 0.0f; // L2 hits out of L2 accesses
             float cpi = totalCycles / NO_OF_Iterations;
 
             cout << "Generator: " << memGenNames[g]
                  << ", L1 Line Size: " << lineSizes[l] << " Bytes\n";
-            cout << "  -> Hit Ratio: " << fixed << setprecision(4) << hitRatio << " %\n";
+            cout << "  -> L1 Hit Ratio: " << fixed << setprecision(5) << hitRatio << " %\n";
+            cout << "  -> L2 Hit Ratio: " << fixed << setprecision(5) << l2HitRatio << " %\n";
             cout << "  -> Effective CPI: " << fixed << setprecision(4) << cpi << "\n\n";
         }
     }
 
     return 0;
 }
-

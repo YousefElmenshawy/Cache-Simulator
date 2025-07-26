@@ -22,6 +22,7 @@ Memory_Access_Simulator::Memory_Access_Simulator(int L1Size, int L1LineSize, int
 {}
 
 cacheResType Memory_Access_Simulator::simulateMemoryAccess(unsigned int addr, bool isRead) {
+    // Only L1 hits are counted as HIT. L2 hits are treated as L2_HIT for L2 hit ratio calculation.
     bool L1WriteBack = false;
     bool L2WriteBackFromEviction = false;
     bool L2WriteBackFromAccess = false;
@@ -29,13 +30,12 @@ cacheResType Memory_Access_Simulator::simulateMemoryAccess(unsigned int addr, bo
     unsigned int evictedAddrL1 = 0;
     unsigned int evictedAddrL2 = 0;
 
+    if (L1.Access(addr, isRead, L1WriteBack, evictedAddrL1)) {
+        lastMissPenalty = 0;
+        return HIT;
+    }
 
-     if (L1.Access(addr, isRead, L1WriteBack, evictedAddrL1)) {
-         lastMissPenalty = 0;
-         return HIT;
-     }
-
-     int penalty = 1;
+    int penalty = 1;
     if (L1WriteBack) {
         // Write evicted line from L1 into L2
         L2.Access(evictedAddrL1, false, L2WriteBackFromEviction, evictedAddrL2);
@@ -49,7 +49,7 @@ cacheResType Memory_Access_Simulator::simulateMemoryAccess(unsigned int addr, bo
     if (L2.Access(addr, isRead, L2WriteBackFromAccess, evictedAddrL2)) {
         penalty += L2HitTime;
         lastMissPenalty = penalty - 1;  // subtract base cycle already included
-        return HIT;
+        return L2_HIT; // Return L2_HIT instead of MISS
     }
 
     penalty += L2HitTime + DRAMPenalty;

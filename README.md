@@ -12,7 +12,8 @@ This project implements a **two-level cache simulator** in C++ that models memor
   - Associativity
 - Supports 5 distinct memory access generators
 - Measures:
-  - Hit ratio
+  - L1 Hit Ratio
+  - L2 Hit Ratio
   - Effective CPI (cycles per instruction)
 
 ---
@@ -102,8 +103,9 @@ Cache_Simulator.exe [memoryGenID] [L1LineSize] [iterations]
 
 ```
 Generator: memGen3, L1 Line Size: 64 Bytes
-  -> Hit Ratio: 0.20 %
-  -> Effective CPI: 25.25
+  -> L1 Hit Ratio: 0.02739 %
+  -> L2 Hit Ratio: 0.17064 %
+  -> Effective CPI: 23.9685
 ```
 
 - **Hit Ratio:** Percentage of memory accesses that hit in L1 or L2
@@ -163,8 +165,8 @@ Generator: memGen3, L1 Line Size: 64 Bytes
 
 - Yousef Elmenshawy
 - Kareem Rashed
-- Doha
-- Habiba 
+- Doha Deia
+- Habiba Saad
 
 ---
 
